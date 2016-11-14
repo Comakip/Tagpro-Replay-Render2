@@ -25,8 +25,8 @@ class Players:
             h = newtile.height
             rx, ry = self.functions["tiles"][i]
             subtile = newtile.get_region(x=rx, y=h-40 -ry, width=40, height=40)
-            subtile.anchor_x = subtile.width/2
-            subtile.anchor_y = subtile.height/2
+            subtile.anchor_x = int(subtile.width/2)
+            subtile.anchor_y = int(subtile.height/2)
             subtile = pyglet.sprite.Sprite(subtile, batch=self.batch)
             self.tiles[i] = subtile
         for i in self.flag:
@@ -98,7 +98,7 @@ class Players:
     def _drawflag(self, p_data):
         x, y, draw, dead, team, name, angle, flag = p_data[0:8]
         if draw and not dead and team:
-            self.tiles[flag].x, self.tiles[flag].y = x + 10, y + 20
+            self.tiles[flag].x, self.tiles[flag].y = x - 7, y + 11
             self.tiles[flag].draw()
 
 
