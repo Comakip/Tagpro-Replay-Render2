@@ -7,12 +7,12 @@ import sys, os, traceback, string, time, json, pyglet
 
 class GenMap:
     files = {}
-    script_path = os.path.dirname(__file__)
-    files["tiles"] = script_path + "/img/Tiles.png"
-    files["portal"] = script_path + "/img/Portal.png"
-    files["boost"] = script_path + "/img/Boost.png"
-    files["blue boost"] = script_path + "/img/Blue Boost.png"
-    files["red boost"] = script_path + "/img/Red Boost.png"
+    script_path = os.getcwd()
+    files["tiles"] = script_path + "\\img\\Tiles.png"
+    files["portal"] = script_path + "\\img\\Portal.png"
+    files["boost"] = script_path + "\\img\\Boost.png"
+    files["blue boost"] = script_path + "\\img\\Blue Boost.png"
+    files["red boost"] = script_path + "\\img\\Red Boost.png"
     functions = {"tiles" : tiles_map
                #, "portal" : portal_map, "boost" : boost_map, 
                #  "red boost" : boost_red_map, "blue boost" : boost_blue_map}
@@ -99,18 +99,28 @@ class GenMap:
                     newtile_sub = newtile.crop(box)
                     self.tiles[i] = newtile_sub
 
+    def focus(self):
+        players = {}
+        for i in self.map_data:
+            if "player" in i:
+                if True in self.map_data[i]["draw"]:
+                    players[i] = self.map_data[i]
+        for i in players:
+            if players[i]["me"] == "me":
+                return players[i]
 
-    def __init__(self, map_data):
+    def __init__(self, replay_data, win):
         self.t = 0
-        h =len(map_data["map"][0])
-        w = len(map_data["map"])
+        h =len(replay_data["map"][0])
+        w = len(replay_data["map"])
         self.data = {}
         self.data["height"] = h*40
         self.data["width"] = w*40
         self.data["map height"] = h
         self.data["map width"] = w
+        self.data["win"] = win
         self.last = False
-        self.map_data = map_data
+        self.map_data = replay_data
         self._toStrings()
         #self.tiles = pyglet.image.load(self.files["tiles"])
         self.s_batch = pyglet.graphics.Batch()
@@ -119,6 +129,9 @@ class GenMap:
         self._gen_smooth()
         self._gen_Tile_Objs()
         self.img = Image.new("RGBA", (w*40, h*40), "black")
+        self.follow = False
+        self.data["player"] = self.focus()
+        self.data["frame"] = 0
 
     def RenderMap(self):
         m_height = self.data["height"]
@@ -158,20 +171,17 @@ class GenMap:
         spr_.x, spr_.y = 0, 0
         self.sprite = spr_
 
-    def draw(self, dt, offset=None):
-        #self.t += dt
-        #w, h = self.data["width"], self.data["height"]
-        #hr, wr = float(w)/h, float(h)/w
-        #top = w
-        #if h > w:
-        #    top = h
-        #x, y = -(self.t*w/8 % top), -(self.t*h/8 % top)
-        #if self.t*h/top > 8 or self.t*w/top > 8:
-        #    self.t = 0
-        if offset:
-            self.sprite.x += offset[0]
-            self.sprite.x += offset[1]
+    def draw(self, dt):
+        frame = self.data["frame"]
+        w, h = self.data["win"]
+        mh = self.data["height"]
+        if self.follow:
+            self.sprite.x = w/2 - self.data["player"]["x"][frame] - 20
+            self.sprite.y = h/2 -mh + self.data["player"]["y"][frame] + 20
         self.sprite.draw()
+        self.data["frame"] += 1
+        self.data["frame"] = self.data["frame"] % len(self.data["player"]["x"])
+
 
     def __str__(self):
         out = ""
@@ -186,12 +196,13 @@ def back(dt):
     pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2f', quad), color)
 
 def main():
+    w, h = 1080, 800
     backGr = (0, 0, 0)
     filen = sys.argv[1]
     replay = DecodeReplay(filen)
-    tp_map = GenMap(replay.data)
+    tp_map = GenMap(replay.data, (w, h))
+    tp_map.follow = True
     tp_map.RenderMap()
-    w, h = 1080, 800
     win = pyglet.window.Window(w, h, visible=False, caption="", vsync=0)
     win.set_visible()
     win.PYGLET_VSYNC = 0

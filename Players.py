@@ -10,9 +10,9 @@ import sys, os, traceback, string, time, json, random, datetime
 
 class Players:
     files = {}
-    script_path = os.path.dirname(__file__)
-    files["tiles"] = script_path + "/img/Tiles.png"
-    files["flairs"] =script_path + "/img/Flair.png"
+    script_path = os.getcwd()
+    files["tiles"] = script_path + "\\img\\Tiles.png"
+    files["flairs"] =script_path + "\\img\\Flair.png"
     functions = {"tiles" : tiles_map
                  }
     balls = ("blue ball", "red ball")
@@ -46,13 +46,20 @@ class Players:
             text = Outlined(i, "Times New Roman", 10, 0, 0)
             self.names[i] = text
 
-    def __init__(self, replay_data):
+
+    def focus(self):
+        for i in self.players:
+            if self.players[i]["me"] == "me":
+                return self.players[i]
+
+    def __init__(self, replay_data, win):
         self.t = 0
         self.data = {}
         self.data["frame"] = 0
         self.data["replay"] = replay_data
         self.data["width"] = len(replay_data["map"])
         self.data["height"] = len(replay_data["map"][0])
+        self.data["win"] = win
         n = 0
         self.players = {}
         self.batch = pyglet.graphics.Batch()
@@ -62,6 +69,7 @@ class Players:
                     self.players[i] = replay_data[i]
         self._gen_Tile_Objs()
         self._gen_names()
+        self.data["player"] = self.focus()
 
 
     def _angle(self, cur):
@@ -129,44 +137,46 @@ class Players:
             self._drawplayer(p_data[i])
             if flag:
                 self._drawflag(p_data[i])
-        #print(x, y, h, offset)
         for i in p_data:
-            self._drawflair(p_data[i])
+            #self._drawflair(p_data[i])
             self._drawname(p_data[i], i)
         self.data["frame"] += 1
         self.data["frame"] = self.data["frame"] % len(cur["x"])
 
     def draw(self, dt):
-        w, h = self.data["width"]*40, self.data["height"]*40
-        self.t += dt
-        top = w
-        if h > w:
-            top = h
-        x, y = - (self.t*w/8 % top), - (self.t*h/8 % top)
-        if self.t*h/top > 8 or self.t*w/top > 8:
-            self.t = 0
-        self.NewFrame(dt)
+        w, h = self.data["win"]
+        mh = self.data["height"]*40
+        frame = self.data["frame"]
+        x = w/2 - self.data["player"]["x"][frame] - 20
+        y = h/2 - mh + self.data["player"]["y"][frame] + 20
+        offset = x, y
+        self.NewFrame(dt, offset)
 
-def draw(dt, funcs):
+
+def draw(dt, funcs, fps):
     back()
     for i in funcs:
         i.draw(dt)
+    fps.draw()
     #print(dt)
 
 def main():
+    w, h = 1000, 800
     backGr = (0, 0, 0)
     filen = sys.argv[1]
     replay = DecodeReplay(filen)
-    Newmap = GenMap(replay.data)
+    Newmap = GenMap(replay.data, (w, h))
     Newmap.RenderMap()
-    dynamic = DynamicElements(replay.data)
-    players = Players(replay.data)
-    w, h = 1000, 800
-    win = pyglet.window.Window(w, h, visible=False, caption="", vsync=0)
+    Newmap.follow = True
+    dynamic = DynamicElements(replay.data, (w, h))
+    dynamic.follow = True
+    players = Players(replay.data, (w, h))
+    win = pyglet.window.Window(w, h, visible=False, caption="")
     win.set_visible()
+    fps= pyglet.clock.ClockDisplay()
     d_time = 1.0/60
     funcs = (Newmap, dynamic, players)
-    pyglet.clock.schedule_interval(draw, d_time, funcs)
+    pyglet.clock.schedule_interval(draw, d_time, funcs, fps)
     pyglet.app.run()
 
 

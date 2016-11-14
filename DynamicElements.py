@@ -8,12 +8,12 @@ import sys, os, traceback, string, time, json, random
 class DynamicElements:
 
     files = {}
-    script_path = os.path.dirname(__file__)
-    files["tiles"] = script_path + "/img/tiles.png"
-    files["portal"] = script_path + "/img/portal.png"
-    files["boost"] = script_path + "/img/Boost.png"
-    files["blue boost"] = script_path + "/img/Blue Boost.png"
-    files["red boost"] = script_path + "/img/Red Boost.png"
+    script_path = os.getcwd()
+    files["tiles"] = script_path + "\\img\\tiles.png"
+    files["portal"] = script_path + "\\img\\portal.png"
+    files["boost"] = script_path + "\\img\\Boost.png"
+    files["blue boost"] = script_path + "\\img\\Blue Boost.png"
+    files["red boost"] = script_path + "\\img\\Red Boost.png"
     functions = {"tiles" : tiles_map
                , "portal" : portal_map, "boost" : boost_map, 
                  "red boost" : boost_red_map, "blue boost" : boost_blue_map
@@ -76,9 +76,19 @@ class DynamicElements:
                         newsprite = pyglet.sprite.Sprite(newtile_sub)
                         self.tiles_ani[i].append(newsprite)
 
+    def focus(self):
+        replay = self.data["replay"]
+        players = {}
+        for i in replay:
+            if "player" in i:
+                if True in replay[i]["draw"]:
+                    players[i] = replay[i]
+        for i in players:
+            if players[i]["me"] == "me":
+                return players[i]
 
 
-    def __init__(self, replay_data):
+    def __init__(self, replay_data, win):
         self.data = {}
         w = len(replay_data["map"])*40
         h = len(replay_data["map"][0])*40
@@ -86,9 +96,12 @@ class DynamicElements:
         self.t = 0
         self.data["frame"] = 0
         self.data["replay"] = replay_data
+        self.data["win"] = win
         self.sprites = []
         self._toStrings()
         self._gen_Tile_Objs()
+        self.follow = False
+        self.data["player"] = self.focus()
 
 
     def NewFrame(self, dt, offset = None):
@@ -121,17 +134,14 @@ class DynamicElements:
         self.data["frame"] = self.data["frame"] % len(dyn[0]["tiles"])
 
     def draw(self, dt):
-        #w, h = self.data["width"], self.data["height"]
-        #self.t += dt
-        #top = w
-        #if h > w:
-        #    top = h
-        #x, y = -(self.t*w/8 % top), -(self.t*h/8 % top)
-        #if self.t*h/top > 8 or self.t*w/top > 8:
-        #    self.t = 0
-        #fps = pyglet.clock.ClockDisplay()
-        #fps.draw()
-        self.NewFrame(dt)
+        w, h = self.data["win"]
+        mh = self.data["height"]
+        frame = self.data["frame"]
+        x, y = 0, 0
+        if self.follow:
+            x = w/2 - self.data["player"]["x"][frame] - 20
+            y = h/2 - mh + self.data["player"]["y"][frame] + 20
+        self.NewFrame(dt, (x, y))
 
 def draw(dt, funcs):
     back()
@@ -144,14 +154,14 @@ def back():
     pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2f', quad), color)
 
 def main():
+    w, h = 1080, 800
     BackGr = (0, 0, 0)
     filen = sys.argv[1]
     replay = DecodeReplay(filen)
-    Newmap = GenMap(replay.data)
+    Newmap = GenMap(replay.data, (w, h))
     Newmap.RenderMap()
-    dynamic = DynamicElements(replay.data)
+    dynamic = DynamicElements(replay.data, (w, h))
     old_time = time.time()
-    w, h = 1080, 800
     win = pyglet.window.Window(w, h, visible=False, caption="", vsync=0)
     win.set_visible()
     d_time = 1.0/60
