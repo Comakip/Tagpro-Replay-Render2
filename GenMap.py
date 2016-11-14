@@ -17,10 +17,9 @@ class GenMap:
                #, "portal" : portal_map, "boost" : boost_map, 
                #  "red boost" : boost_red_map, "blue boost" : boost_blue_map}
                }
-    dynamic = ["bomb", "bomb off", "neutral flag", "neutral flag away", "red flag", 
-               "red flag away", "blue flag", "blue flag away", "gate off", 
+    dynamic = ["bomb", "neutral flag", "red flag", "blue flag", 
                "gate neutral", "gate red", "gate blue", "tagpro", "jukejuice", 
-               "rolling bomb", "powerup off", "mars ball", "portal", "portal off", 
+               "rolling bomb", "mars ball", "portal", "portal off", 
                 "boost", "boost off", "red boost", "red boost off", "blue boost",
                 "blue boost off"]
     with open('rotateCoords.json') as data_file:    
@@ -39,7 +38,7 @@ class GenMap:
 
 
     def _back_tiles(self):
-        excluded = ("black", "wall", "floor", "gate off", "gate neutral", "gate red", 
+        excluded = ("black", "wall", "floor", "gate neutral", "gate red", 
                     "gate blue", "red endzone", "blue endzone")
         background = ("floor", "black", "red speed", "blue speed",
                       "red endzone", "blue endzone")
@@ -136,6 +135,16 @@ class GenMap:
     def RenderMap(self):
         m_height = self.data["height"]
         excluded = ["315 tile", "45 tile", "225 tile", "135 tile"]
+        off = {"gate red" : "gate off", "gate blue" : "gate off", 
+                "gate green" : "gate off", "gate off" : "gate off", 
+                "red flag" : "red flag away", "red flag away" : "red flag away", 
+                "blue flag" : "blue flag away", "blue flag away" : "blue flag away", 
+                "yellow flag" : "yellow flag away", 
+                "yellow flag away" : "yellow flag away", "bomb" : "bomb off", 
+                "bomb off" : "bomb off", "jukejuice" : "powerup off", 
+                "rolling bomb" : "powerup off", "tagpro" : "powerup off", 
+                "powerup off" : "powerup off"
+                }
         newtile = pyglet.image.load(self.files["tiles"])
         for i in range(len(self.back_tiles)):
             if self.back_tiles[i]:
@@ -146,6 +155,11 @@ class GenMap:
            if self.tiles_id[i] not in self.dynamic and self.tiles_id[i] not in excluded:
                 rect = (self.rects[i][0], self.rects[i][1])
                 subtile = self.tiles[self.tiles_id[i]]
+                self.img.paste(subtile, rect, mask=subtile)
+        for i in range(len(self.tiles_id)):
+            if self.tiles_id[i] in off:
+                rect = self.rects[i][0], self.rects[i][1]
+                subtile = self.tiles[off[self.tiles_id[i]]]
                 self.img.paste(subtile, rect, mask=subtile)
         w_map = self.map_data["wallMap"]
         rel_coord = [(0, 0), (0, 20), (20,20), (20, 0)]

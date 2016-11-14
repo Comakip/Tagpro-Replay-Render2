@@ -76,7 +76,7 @@ class Players:
         frame = self.data["frame"]
         angle = cur["angle"][frame]
         if angle:
-            angle = angle*360/(2*3.14)
+            angle = -angle*360/(2*3.14)
         return angle
 
     def _drawplayer(self, p_data):

@@ -19,7 +19,7 @@ class DynamicElements:
                  "red boost" : boost_red_map, "blue boost" : boost_blue_map
                  }
     dynamic = ["bomb", "bomb off", "neutral flag", "neutral flag away", "red flag", 
-               "red flag away", "blue flag", "blue flag away", "gate off", 
+               "red flag away", "blue flag", "blue flag away", 
                "gate neutral", "gate red", "gate blue", "tagpro", "jukejuice", 
                "rolling bomb", "powerup off", "mars ball", "portal off", 
                 "boost off", "red boost off", "blue boost off", "black"]
@@ -109,6 +109,8 @@ class DynamicElements:
         dyn = self.data["dynamic"]
         animated = self.animated
         w,h = self.data["width"]/40, self.data["height"]/40
+        off = ["gate off", "powerup off", "red flag away", 
+                "blue flag away", "yellow flag away", "bomb off"]
         for i in range(len(dyn)):
             x, y = dyn[i]["x"], h - 1 - dyn[i]["y"]
             #print(x)
@@ -123,13 +125,14 @@ class DynamicElements:
                 self.tile_frame[i] += 0.25
                 self.tile_frame[i] = self.tile_frame[i] % len(self.tiles_ani[tile])
             else:
-                tile = dyn[i]["tiles"][frame]
-                rect = (x*40, y*40)
-                if offset:
-                    rect = (x*40 + offset[0], y*40 + offset[1])
-                self.tiles[dyn[i]["tiles"][frame]].x = rect[0]
-                self.tiles[dyn[i]["tiles"][frame]].y = rect[1]
-                self.tiles[dyn[i]["tiles"][frame]].draw()
+                if dyn[i]["tiles"][frame] not in off:
+                    tile = dyn[i]["tiles"][frame]
+                    rect = (x*40, y*40)
+                    if offset:
+                        rect = (x*40 + offset[0], y*40 + offset[1])
+                    self.tiles[dyn[i]["tiles"][frame]].x = rect[0]
+                    self.tiles[dyn[i]["tiles"][frame]].y = rect[1]
+                    self.tiles[dyn[i]["tiles"][frame]].draw()
         self.data["frame"] += 1
         self.data["frame"] = self.data["frame"] % len(dyn[0]["tiles"])
 
