@@ -9,11 +9,11 @@ class DynamicElements:
 
     files = {}
     script_path = os.getcwd()
-    files["tiles"] = script_path + "\\img\\tiles.png"
-    files["portal"] = script_path + "\\img\\portal.png"
-    files["boost"] = script_path + "\\img\\Boost.png"
-    files["blue boost"] = script_path + "\\img\\Blue Boost.png"
-    files["red boost"] = script_path + "\\img\\Red Boost.png"
+    files["tiles"] = script_path + "/img/tiles.png"
+    files["portal"] = script_path + "/img/portal.png"
+    files["boost"] = script_path + "/img/boost.png"
+    files["blue boost"] = script_path + "/img/blue boost.png"
+    files["red boost"] = script_path + "/img/red boost.png"
     functions = {"tiles" : tiles_map
                , "portal" : portal_map, "boost" : boost_map, 
                  "red boost" : boost_red_map, "blue boost" : boost_blue_map

@@ -11,8 +11,8 @@ import sys, os, traceback, string, time, json, random, datetime
 class Players:
     files = {}
     script_path = os.getcwd()
-    files["tiles"] = script_path + "\\img\\Tiles.png"
-    files["flairs"] =script_path + "\\img\\Flair.png"
+    files["tiles"] = script_path + "/img/tiles.png"
+    files["flairs"] =script_path + "/img/flair.png"
     functions = {"tiles" : tiles_map
                  }
     balls = ("blue ball", "red ball")
