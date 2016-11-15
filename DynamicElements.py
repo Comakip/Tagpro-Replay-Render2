@@ -64,6 +64,8 @@ class DynamicElements:
                     #print(rx, ry, self.files[element])
                     newtile_sub = newtile.get_region(x=rx, y = h - 40 - ry, 
                                                      width = 40, height = 40)
+                    newtile_sub.anchor_x = 20
+                    newtile_sub.anchor_y = 20
                     newsprite = pyglet.sprite.Sprite(newtile_sub)
                     self.tiles[i] = newsprite
                 if i in self.animated:
@@ -73,6 +75,8 @@ class DynamicElements:
                         h = newtile.height
                         newtile_sub = newtile.get_region(x=rx, y= h - 40 - ry, 
                                                          width = 40, height = 40)
+                        newtile_sub.anchor_x = 20
+                        newtile_sub.anchor_y = 20
                         newsprite = pyglet.sprite.Sprite(newtile_sub)
                         self.tiles_ani[i].append(newsprite)
 
@@ -113,25 +117,27 @@ class DynamicElements:
                 "blue flag away", "yellow flag away", "bomb off"]
         for i in range(len(dyn)):
             x, y = dyn[i]["x"], h - 1 - dyn[i]["y"]
-            #print(x)
             if dyn[i]["tiles"][frame] in animated:
                 n = int(self.tile_frame[i])
                 tile = dyn[i]["tiles"][frame]
-                rect = (x*40, y*40)
+                rect = (x*40 + 20, y*40 + 20)
                 if offset:
-                    rect = (x*40 + offset[0], y*40 + offset[1])
+                    rect = (x*40 + 20 + offset[0], y*40 + 20 + offset[1])
                 self.tiles_ani[tile][n].x, self.tiles_ani[tile][n].y = rect
+                #self.tiles_ani[tile][n].rotation = self.data["frame"]*10 % 360
                 self.tiles_ani[tile][n].draw()
                 self.tile_frame[i] += 0.25
                 self.tile_frame[i] = self.tile_frame[i] % len(self.tiles_ani[tile])
             else:
                 if dyn[i]["tiles"][frame] not in off:
                     tile = dyn[i]["tiles"][frame]
-                    rect = (x*40, y*40)
+                    rect = (x*40 + 20, y*40 + 20)
                     if offset:
-                        rect = (x*40 + offset[0], y*40 + offset[1])
+                        rect = (x*40 + offset[0] + 20, y*40 + offset[1] + 20)
                     self.tiles[dyn[i]["tiles"][frame]].x = rect[0]
                     self.tiles[dyn[i]["tiles"][frame]].y = rect[1]
+                    #self.tiles[dyn[i]["tiles"][frame]].rotation = \
+                    #                           self.data["frame"]*10 % 360
                     self.tiles[dyn[i]["tiles"][frame]].draw()
         self.data["frame"] += 1
         self.data["frame"] = self.data["frame"] % len(dyn[0]["tiles"])
