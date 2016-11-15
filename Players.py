@@ -27,6 +27,7 @@ class Players:
             subtile = newtile.get_region(x=rx, y=h-40 -ry, width=40, height=40)
             subtile.anchor_x = int(subtile.width/2)
             subtile.anchor_y = int(subtile.height/2)
+            subtile.anchor_x, subtile.anchor_y = 20, 20
             subtile = pyglet.sprite.Sprite(subtile, batch=self.batch)
             self.tiles[i] = subtile
         for i in self.flag:
@@ -36,8 +37,12 @@ class Players:
             subtile = newtile.get_region(x=rx, y=h-40 -ry, width=40, height=40)
             subtile = pyglet.sprite.Sprite(subtile, batch=self.batch)
             self.tiles[i] = subtile
-        self.flairs = pyglet.image.load((self.files["flairs"]))
 
+    def _gen_flairs(self):
+        #flairs
+        flairs = pyglet.image.load((self.files["flairs"]))
+        grid = pyglet.image.ImageGrid(flairs, 10, 11)
+        self.flairs = pyglet.image.TextureGrid(grid)
 
     def _gen_names(self):
         self.names = {}
@@ -69,26 +74,31 @@ class Players:
                     self.players[i] = replay_data[i]
         self._gen_Tile_Objs()
         self._gen_names()
+        self._gen_flairs()
         self.data["player"] = self.focus()
-
+        self.p_angle = 0
 
     def _angle(self, cur):
         frame = self.data["frame"]
         angle = cur["angle"][frame]
         if angle:
-            angle = -angle*360/(2*3.14)
+            angle = int(angle*360/(2*3.14))
         return angle
 
     def _drawplayer(self, p_data):
         x, y, draw, dead, team, name, angle = p_data[0:7]
         if draw and not dead and team:
             if angle:
-                self.tiles[team].rotation = -angle
+                if angle != self.p_angle:
+                    self.tiles[team].rotation = angle
+                    self.tiles[team].scale = 1
             self.tiles[team].x, self.tiles[team].y = x, y
             self.tiles[team].draw()
+            self.p_angle = angle
 
     def _drawname(self, p_data, player):
         x, y, draw, dead, team, name = p_data[0:6]
+        x,y = int(x), int(y)
         if draw and not dead and team:
             self.names[player].data["coords"] = (x + 18, y + 32)
             self.names[player].data["string"] = name
@@ -104,11 +114,13 @@ class Players:
 
     def _drawflair(self, p_data):
         x, y, draw, dead, team, name, angle, flag, flair = p_data[0:9]
-        h = self.flairs.height
+        h = self.flairs.height/16
         if flair and draw and not dead and team:
-            rx, ry = flair["x"]*16, h - flair["y"]*16
-            subtile = self.flairs.get_region(x = rx, y = ry, width=16, height=16)
-            subtile = pyglet.sprite.Sprite(subtile)
+            rx, ry = flair["x"], h - 1 - flair["y"]
+            rx, ry = int(rx), int(ry)
+            pos = ry*11 + rx
+            flair_t = self.flairs[(pos)]
+            subtile = pyglet.sprite.Sprite(flair_t)
             subtile.x, subtile.y = x  - 6, y + 27
             subtile.draw()
 
@@ -123,11 +135,13 @@ class Players:
         h = self.data["height"]
         w = self.data["width"]
         p_data = {}
+        #timea = time.time()
         for i in players:
             cur = players[i]
             x, y = cur["x"][frame] + 20, h*40 - cur["y"][frame] - 20
             if offset and x and y:
                 x, y = x + offset[0], y + offset[1]
+            x, y = int(x), int(y)
             flag = flags[cur["flag"][frame]]
             angle = self._angle(cur)
             team = teams[cur["team"][frame]]
@@ -140,6 +154,8 @@ class Players:
         for i in p_data:
             #self._drawflair(p_data[i])
             self._drawname(p_data[i], i)
+        #timeb = time.time()
+        #print(timeb - timea)
         self.data["frame"] += 1
         self.data["frame"] = self.data["frame"] % len(cur["x"])
 
@@ -154,10 +170,13 @@ class Players:
 
 
 def draw(dt, funcs, fps):
+    #timea = time.time()
     back()
     for i in funcs:
         i.draw(dt)
     fps.draw()
+    #timeb = time.time()
+    #print(timea - timeb)
     #print(dt)
 
 def main():
@@ -176,6 +195,7 @@ def main():
     fps= pyglet.clock.ClockDisplay()
     d_time = 1.0/60
     funcs = (Newmap, dynamic, players)
+    #funcs = (dynamic, players)
     pyglet.clock.schedule_interval(draw, d_time, funcs, fps)
     pyglet.app.run()
 
