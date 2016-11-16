@@ -3,6 +3,7 @@ from DecodeReplay import *
 from GenMap import *
 from DynamicElements import *
 from Outline import *
+from PIL import Image
 
 import pyglet
 
@@ -20,16 +21,19 @@ class Players:
 
     def _gen_Tile_Objs(self):
         self.tiles = {}
+        newtile = Image.open(self.files["tiles"])
         for i in self.balls:
-            newtile = pyglet.image.load(self.files["tiles"])
-            h = newtile.height
+            self.tiles[i] = []
             rx, ry = self.functions["tiles"][i]
-            subtile = newtile.get_region(x=rx, y=h-40 -ry, width=40, height=40)
-            subtile.anchor_x = int(subtile.width/2)
-            subtile.anchor_y = int(subtile.height/2)
-            subtile.anchor_x, subtile.anchor_y = 20, 20
-            subtile = pyglet.sprite.Sprite(subtile, batch=self.batch)
-            self.tiles[i] = subtile
+            subtile = newtile.crop((rx, ry, rx + 40, ry + 40))
+            for j in range(360):
+                n_img = subtile.rotate(j, resample=Image.BICUBIC)
+                n_img = n_img.tobytes()
+                pyg_img = pyglet.image.ImageData(40, 40, "RGBA", n_img)
+                pyg_img.anchor_x = int(pyg_img.width/2)
+                pyg_img.anchor_y = int(pyg_img.height/2)
+                pyg_spr = pyglet.sprite.Sprite(pyg_img)
+                self.tiles[i].append(pyg_spr)
         for i in self.flag:
             newtile = pyglet.image.load(self.files["tiles"])
             h = newtile.height
@@ -88,13 +92,13 @@ class Players:
     def _drawplayer(self, p_data):
         x, y, draw, dead, team, name, angle = p_data[0:7]
         if draw and not dead and team:
-            if angle:
-                if angle != self.p_angle:
-                    self.tiles[team].rotation = angle
-                    self.tiles[team].scale = 1
-            self.tiles[team].x, self.tiles[team].y = x, y
-            self.tiles[team].draw()
-            self.p_angle = angle
+            #if angle:
+            #    if angle != self.p_angle:
+            #        self.tiles[team].rotation = angle
+            #        self.tiles[team].scale = 1
+            angle = int(angle % 360)
+            self.tiles[team][angle].x, self.tiles[team][angle].y = x, y
+            self.tiles[team][angle].draw()
 
     def _drawname(self, p_data, player):
         x, y, draw, dead, team, name = p_data[0:6]
