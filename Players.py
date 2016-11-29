@@ -4,6 +4,7 @@ from GenMap import *
 from DynamicElements import *
 from Outline import *
 from PIL import Image
+from pyglet.window import key
 
 import pyglet
 
@@ -81,6 +82,8 @@ class Players:
         self._gen_flairs()
         self.data["player"] = self.focus()
         self.p_angle = 0
+        self.keys = key.KeyStateHandler()
+        win[0].push_handlers(self.keys)
 
     def _angle(self, cur):
         frame = self.data["frame"]
@@ -130,6 +133,7 @@ class Players:
 
 
     def NewFrame(self, dt, offset = None):
+        last = len(self.data["replay"]["score"])
         bool = {"false" : False, "true" : True}
         teams = {2 : "blue ball", 1 : "red ball", 0 : False, None : False}
         flags = {1 : "red flag", 2 : "blue flag", 3 : "neutral flag", 0 : False, 
@@ -142,10 +146,11 @@ class Players:
         #timea = time.time()
         for i in players:
             cur = players[i]
-            x, y = cur["x"][frame] + 20, h*40 - cur["y"][frame] - 20
+            x, y = cur["x"][frame], cur["y"][frame]
             if offset and x and y:
+                x, y = x + 20, h*40 - y - 20
                 x, y = x + offset[0], y + offset[1]
-            x, y = int(x), int(y)
+                x, y = int(x), int(y)
             flag = flags[cur["flag"][frame]]
             angle = self._angle(cur)
             team = teams[cur["team"][frame]]
@@ -155,16 +160,36 @@ class Players:
             self._drawplayer(p_data[i])
             if flag:
                 self._drawflag(p_data[i])
-        for i in p_data:
+        #for i in p_data:
             #self._drawflair(p_data[i])
-            self._drawname(p_data[i], i)
+            #self._drawname(p_data[i], i)
         #timeb = time.time()
         #print(timeb - timea)
         self.data["frame"] += 1
-        self.data["frame"] = self.data["frame"] % len(cur["x"])
+        self.data["frame"] = self.data["frame"] % last
+
+    def on_key_press(self, button, modifiers):
+        frame = self.data["frame"]
+        if self.keys[key.LEFT]:
+            frame -= 60*5
+        if self.keys[key.RIGHT]:
+            frame += 60*5
+        if frame < 0:
+            frame = 0
+        if frame >= len(self.data["replay"]["score"]):
+            frame = 0
+        self.dynamic.data["frame"] = frame
+        self.gmap.data["frame"] = frame
+        self.data["frame"] = frame
+
+
+            
+    def add_previous(self, gmap, dynamic):
+        self.gmap = gmap
+        self.dynamic = dynamic
 
     def draw(self, dt):
-        w, h = self.data["win"]
+        w, h = self.data["win"][1:]
         mh = self.data["height"]*40
         frame = self.data["frame"]
         x = w/2 - self.data["player"]["x"][frame] - 20
@@ -173,18 +198,21 @@ class Players:
         self.NewFrame(dt, offset)
 
 
-def draw(dt, funcs, fps):
+def draw(dt, funcs, fps, win):
     #timea = time.time()
-    back()
+    #back()
+    win.clear()
     for i in funcs:
+        #i.data["frame"] += 3
         i.draw(dt)
     fps.draw()
     #timeb = time.time()
     #print(timea - timeb)
     #print(dt)
 
+
 def main():
-    w, h = 1000, 800
+    w, h = 1320, 850
     backGr = (0, 0, 0)
     filen = sys.argv[1]
     replay = DecodeReplay(filen)
@@ -193,14 +221,16 @@ def main():
     Newmap.follow = True
     dynamic = DynamicElements(replay.data, (w, h))
     dynamic.follow = True
-    players = Players(replay.data, (w, h))
-    win = pyglet.window.Window(w, h, visible=False, caption="")
+    win = pyglet.window.Window(w, h, visible=False, caption="", vsync=0)
+    players = Players(replay.data, (win, w, h))
+    players.add_previous(Newmap, dynamic)
+    win.on_key_press = players.on_key_press
     win.set_visible()
     fps= pyglet.clock.ClockDisplay()
     d_time = 1.0/60
     funcs = (Newmap, dynamic, players)
     #funcs = (dynamic, players)
-    pyglet.clock.schedule_interval(draw, d_time, funcs, fps)
+    pyglet.clock.schedule_interval(draw, d_time, funcs, fps, win)
     pyglet.app.run()
 
 

@@ -190,12 +190,11 @@ class GenMap:
         w, h = self.data["win"]
         mh = self.data["height"]
         if self.follow:
-            self.sprite.x = w/2 - self.data["player"]["x"][frame] - 20
-            self.sprite.y = h/2 -mh + self.data["player"]["y"][frame] + 20
+            self.sprite.x = int(w/2 - self.data["player"]["x"][frame] - 20)
+            self.sprite.y = int(h/2 -mh + self.data["player"]["y"][frame] + 20)
         self.sprite.draw()
         self.data["frame"] += 1
         self.data["frame"] = self.data["frame"] % len(self.data["player"]["x"])
-
 
     def __str__(self):
         out = ""
@@ -205,7 +204,7 @@ class GenMap:
         return out
 
 def back(dt):
-    quad = (0, 800, 1080, 800, 1080, 0, 0, 0)
+    quad = (0, 1300, 1300, 1300, 1300, 0, 0, 0)
     color = 'c3B', (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2f', quad), color)
 

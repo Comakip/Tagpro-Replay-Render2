@@ -109,8 +109,8 @@ class DynamicElements:
 
 
     def NewFrame(self, dt, offset = None):
-        frame = self.data["frame"]
         dyn = self.data["dynamic"]
+        frame = self.data["frame"]
         animated = self.animated
         w,h = self.data["width"]/40, self.data["height"]/40
         off = ["gate off", "powerup off", "red flag away", 
