@@ -175,7 +175,9 @@ class Players:
         if self.keys[key.RIGHT]:
             frame += 60*5
         if frame < 0:
-            frame = 0
+            frame = len(self.data["replay"]["score"]) - 60*5
+            if frame < 0:
+                frame = 0
         if frame >= len(self.data["replay"]["score"]):
             frame = 0
         self.dynamic.data["frame"] = frame
