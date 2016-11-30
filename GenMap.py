@@ -40,8 +40,8 @@ class GenMap:
     def _back_tiles(self):
         excluded = ("black", "wall", "floor", "gate neutral", "gate red", 
                     "gate blue", "red endzone", "blue endzone")
-        background = ("floor", "black", "red speed", "blue speed",
-                      "red endzone", "blue endzone")
+        background = ("floor", "red speed", "blue speed",
+                      "red endzone", "blue endzone", "black")
         self.back_tiles = []
         m_h = self.data["map height"]
         for i in range(len(self.tiles_id)):
@@ -52,16 +52,18 @@ class GenMap:
             else:
                 cur = "floor"
                 for j in background:
-                    try:
-                        if self.tiles_id[i - 1] == j or self.tiles_id[i + 1] == j:
-                            cur = j
-                            break
-                        if self.tiles_id[i - m_h] == j or \
-                           self.tiles_id[i + m_h] == j:
-                            cur = j
-                            break
-                    except:
-                        pass
+                    left, right, top, bot = "black", "black", "black", "black"
+                    if i != 0:
+                        top = self.tiles_id[i - 1]
+                    if i % m_h != 0:
+                        bot = self.tiles_id[i + 1]
+                    if i > m_h:
+                        left = self.tiles_id[i - m_h]
+                    if len(self.tiles_id) - i > m_h:
+                        right = self.tiles_id[i + m_h]
+                    if left == j or right == j or top == j or bot == j:
+                        cur = j
+                        break
                 self.back_tiles.append(cur)
 
 
